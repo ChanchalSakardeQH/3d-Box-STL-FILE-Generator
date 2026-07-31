@@ -36,7 +36,7 @@ jobs:
 
       - run: pnpm run build
         env:
-          BASE_URL: /box-stl-generator/
+          BASE_URL: /3d-Box-STL-FILE-Generator/
 
       - uses: actions/upload-pages-artifact@v3
         with:

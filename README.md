@@ -2,7 +2,7 @@
 
 A web-based parametric box generator for 3D printing. Design custom boxes with compartments, chamfers, and a matching lid — a classic cap lid, a drawer-style sleeve, or a hinged lid with snap-fit hinges — then export ready-to-print STL files for any slicer. Everything runs in the browser; nothing is uploaded anywhere.
 
-**Try it live:** [https://javisperez.github.io/box-stl-generator/](https://javisperez.github.io/box-stl-generator/)
+**Try it live:** [https://chanchalsakardeqh.github.io/3d-Box-STL-FILE-Generator/](https://chanchalsakardeqh.github.io/3d-Box-STL-FILE-Generator/)
 
 ## Features
 

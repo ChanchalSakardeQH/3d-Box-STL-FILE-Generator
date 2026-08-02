@@ -1,4 +1,4 @@
-# 3D Box Generator
+# 3D Box STL file Generator
 
 A web-based parametric box generator for 3D printing. Design custom boxes with compartments, chamfers, and a matching lid — a classic cap lid, a drawer-style sleeve, or a hinged lid with snap-fit hinges — then export ready-to-print STL files for any slicer. Everything runs in the browser; nothing is uploaded anywhere.
 
@@ -7,19 +7,44 @@ A web-based parametric box generator for 3D printing. Design custom boxes with c
 ## Features
 
 - **Real-time 3D preview** — the box updates live as you adjust parameters; preview the lid closed on the box (or the box inside its sleeve) before printing
+
 - **Parametric box** — width/depth/height (10–200 mm), wall thickness, 45° chamfers on the outer vertical edges
+
 - **Compartments** — up to 10 dividers each along width and depth, with adjustable positions and divider thickness
+
 - **Finger slots** — aligned notches cut down from the top edge of the walls and dividers so cards and other flat items can be pinched out, with adjustable width, depth, and position
+
 - **Three lid styles**
   - **Lid** — cap with a lip that hangs into the box, with configurable lip height and printer-fit tolerance
   - **Drawer sleeve** — open-front cover the box slides into, with optional finger notches
   - **Hinged lid** — flat lid with pin-less snap hinges (1–3 along the back edge); the printed lid snaps into the box, no assembly hardware
+  
 - **Lid decoration** — engraved or embossed text/emoji (rotatable in 90° steps) and cutout patterns (circles, squares, diamonds, hexagons, triangles, slots)
+
 - **Smart generators** — volume calculator, compartment calculator, and a division designer that builds layouts from exact compartment sizes
+
 - **Printer fit check** — pick from built-in printer presets (Bambu Lab, Prusa, Creality, Voron, Elegoo) or a custom plate size; the plate is outlined in the preview and you're warned when a part won't fit
+
 - **Projects** — save/load designs in the browser, and share them as JSON files anyone can import
+
 - **STL export** — floating export panel with per-part material estimates (grams of PLA); parts download separately with auto-generated names like `myproject_box_120x90x55.stl`
+
 - **Watertight geometry** — parts are built to be manifold and verified to export with zero open edges, so they slice cleanly
+
+  
+
+**Features added by Chanchal Sakarde : (On top of Original Author)**
+
+No new files or folders were created — everything was done as edits to existing files. Here's the complete list:
+
+| File                              | What changed                                                 |
+| --------------------------------- | ------------------------------------------------------------ |
+| `src/utils/boxGenerator.ts`       | Added `CustomHoleFace`, `CustomHoleShape`, `CustomHole` types, `CUSTOM_HOLE_FACES` / `CUSTOM_HOLE_SHAPES` exports, `makeCustomHole()` helper, the `customHoleCutouts()` geometry function, `customHoles` field on `BoxParams`, and wired the new cutouts into `generateBox()` |
+| `src/utils/projectStorage.ts`     | Added `customHoles: []` to `DEFAULTS`, added validation/sanitization for `customHoles` in `normalizeParams()` (for old saves/share links that predate this field) |
+| `src/components/ControlPanel.tsx` | Added `addCustomHole` / `updateCustomHole` / `removeCustomHole` handlers and the new "Custom Holes" UI section (Face/Shape dropdowns, Size/Position sliders, add/remove) in the Box tab |
+| `scripts/check-stl.ts`            | Added 14 new mesh-integrity test configurations covering every face, every shape, extreme positions, and combinations with dividers/finger-slots/patterns/hinge |
+
+No files were added, renamed, or deleted — it's a pure feature addition on top of the existing structure.
 
 ## Getting Started
 

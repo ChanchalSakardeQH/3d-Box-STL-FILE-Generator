@@ -3,7 +3,7 @@ import { Label } from './ui/label'
 import { Slider } from './ui/slider'
 import { Button } from './ui/button'
 import { Save, RotateCcw, ChevronDown, Trash2, FileDown, FileUp, AlertTriangle, CheckCircle2, Link2, Check, Archive } from 'lucide-react'
-import { BoxParams, sleeveOuterDims, LID_PATTERNS } from '@/utils/boxGenerator'
+import { BoxParams, sleeveOuterDims, LID_PATTERNS, CustomHole, CUSTOM_HOLE_FACES, CUSTOM_HOLE_SHAPES, makeCustomHole } from '@/utils/boxGenerator'
 import { SavedProject, AppSettings, buildShareLink } from '@/utils/projectStorage'
 
 interface ControlPanelProps {
@@ -100,6 +100,21 @@ export function ControlPanel({
     const arr = [...params[axis]]
     arr[index] = value
     onParamsChange({ ...params, [axis]: arr })
+  }
+
+  const addCustomHole = () => {
+    onParamsChange({ ...params, customHoles: [...params.customHoles, makeCustomHole()] })
+  }
+
+  const updateCustomHole = (id: string, patch: Partial<CustomHole>) => {
+    onParamsChange({
+      ...params,
+      customHoles: params.customHoles.map(h => (h.id === id ? { ...h, ...patch } : h)),
+    })
+  }
+
+  const removeCustomHole = (id: string) => {
+    onParamsChange({ ...params, customHoles: params.customHoles.filter(h => h.id !== id) })
   }
 
   const generateFromVolume = () => {
@@ -821,6 +836,113 @@ export function ControlPanel({
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label>Custom Holes</Label>
+                <Button variant="outline" size="sm" onClick={addCustomHole}>
+                  + Add Hole
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                One-off holes you place and size yourself — for cables, buttons, ventilation,
+                or anything the repeating cutout pattern above doesn't cover. Position is a
+                percentage along the wall (or floor), so it stays put if you resize the box.
+                {params.includeHinge && ' On the back wall, keep the vertical position low to clear the hinge.'}
+              </p>
+
+              {params.customHoles.length === 0 && (
+                <p className="text-xs text-muted-foreground italic">No custom holes yet.</p>
+              )}
+
+              {params.customHoles.map((hole, i) => (
+                <div key={hole.id} className="space-y-3 rounded-md border p-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Hole {i + 1}</span>
+                    <button
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => removeCustomHole(hole.id)}
+                      aria-label="Remove hole"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Face</Label>
+                      <select
+                        className="w-full rounded-md border bg-background px-2 py-1.5 text-sm"
+                        value={hole.face}
+                        onChange={(e) => updateCustomHole(hole.id, { face: e.target.value as CustomHole['face'] })}
+                      >
+                        {CUSTOM_HOLE_FACES.map(({ value, label }) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Shape</Label>
+                      <select
+                        className="w-full rounded-md border bg-background px-2 py-1.5 text-sm"
+                        value={hole.shape}
+                        onChange={(e) => updateCustomHole(hole.id, { shape: e.target.value as CustomHole['shape'] })}
+                      >
+                        {CUSTOM_HOLE_SHAPES.map(({ value, label }) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs">Size (mm)</Label>
+                      <span className="text-xs text-muted-foreground">{hole.size}</span>
+                    </div>
+                    <Slider
+                      min={2}
+                      max={40}
+                      step={0.5}
+                      value={hole.size}
+                      onValueChange={(value) => updateCustomHole(hole.id, { size: value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs">
+                        {hole.face === 'floor' ? 'Position — Width (%)' : 'Position — Along Wall (%)'}
+                      </Label>
+                      <span className="text-xs text-muted-foreground">{hole.posU}</span>
+                    </div>
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={hole.posU}
+                      onValueChange={(value) => updateCustomHole(hole.id, { posU: value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs">
+                        {hole.face === 'floor' ? 'Position — Depth (%)' : 'Position — Height (%)'}
+                      </Label>
+                      <span className="text-xs text-muted-foreground">{hole.posV}</span>
+                    </div>
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={hole.posV}
+                      onValueChange={(value) => updateCustomHole(hole.id, { posV: value })}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

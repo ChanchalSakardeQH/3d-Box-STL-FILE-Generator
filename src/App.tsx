@@ -362,13 +362,13 @@ function App() {
       <aside className="lg:w-105 lg:shrink-0 lg:h-full flex flex-col border-t lg:border-t-0 lg:border-l bg-card">
         <header className="flex items-start justify-between gap-4 px-5 py-4 border-b">
           <div>
-            <h1 className="text-xl font-bold">3D Box Generator</h1>
+            <h1 className="text-xl font-bold">3D Box STL File Generator</h1>
             <p className="text-sm text-muted-foreground">
               Parametric boxes for 3D printing
             </p>
           </div>
           <a
-            href="https://github.com/javisperez/box-stl-generator"
+            href="https://chanchalsakardeqh.github.io/3d-Box-STL-FILE-Generator/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground transition-colors mt-1"
@@ -400,27 +400,19 @@ function App() {
         </div>
 
         <footer className="px-5 py-3 border-t text-center text-xs text-muted-foreground">
-          Made by{' '}
+          Added feature by{' '}
           <a
-            href="https://github.com/javisperez"
+            href="https://github.com/ChanchalSakardeQH"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-foreground transition-colors"
           >
-            Javis Perez
+            Chanchal Sakarde
           </a>
           {' '}&amp;{' '}
-          <a
-            href="https://claude.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-foreground transition-colors"
-          >
-            Claude
-          </a>
           {' '}&middot;{' '}
           <a
-            href="https://github.com/javisperez/box-stl-generator"
+            href="https://github.com/ChanchalSakardeQH/3d-Box-STL-FILE-Generator"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-foreground transition-colors"

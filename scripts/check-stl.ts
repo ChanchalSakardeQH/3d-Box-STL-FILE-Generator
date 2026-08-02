@@ -20,6 +20,7 @@ import {
   generateSleeve,
   generateBoxHingeKnuckles,
   generateLidHingeKnuckles,
+  makeCustomHole,
 } from '../src/utils/boxGenerator'
 import { DEFAULTS } from '../src/utils/projectStorage'
 import { prepareTrianglesForExport } from '../src/utils/stlExporter'
@@ -113,6 +114,56 @@ const checks: Check[] = [
     name: 'box · finger slots z + hinge (back wall solid)',
     build: () => {
       const p = { ...base, includeLid: true, includeHinge: true, fingerSlotAxes: 'z' as const }
+      return [generateBox(p), generateBoxHingeKnuckles(p)]
+    },
+  },
+  ...(['front', 'back', 'left', 'right', 'floor'] as const).map(face => ({
+    name: `box · custom hole on ${face}`,
+    build: () => [generateBox({
+      ...base,
+      customHoles: [makeCustomHole({ face, shape: 'hexagons', size: 10, posU: 50, posV: 50 })],
+    })],
+  })),
+  ...PATTERNS.map(shape => ({
+    name: `box · custom hole shape ${shape}`,
+    build: () => [generateBox({
+      ...base,
+      customHoles: [makeCustomHole({ face: 'front', shape, size: 12, posU: 50, posV: 50 })],
+    })],
+  })),
+  {
+    name: 'box · custom holes at extreme positions (0%/100%) + chamfer',
+    build: () => [generateBox({
+      ...base,
+      chamferSize: 1.5,
+      customHoles: [
+        makeCustomHole({ face: 'front', shape: 'circles', size: 8, posU: 0, posV: 0 }),
+        makeCustomHole({ face: 'front', shape: 'circles', size: 8, posU: 100, posV: 100 }),
+        makeCustomHole({ face: 'left', shape: 'squares', size: 8, posU: 0, posV: 100 }),
+        makeCustomHole({ face: 'right', shape: 'diamonds', size: 8, posU: 100, posV: 0 }),
+        makeCustomHole({ face: 'floor', shape: 'triangles', size: 8, posU: 0, posV: 0 }),
+      ],
+    })],
+  },
+  {
+    name: 'box · custom holes + dividers + finger slots + pattern',
+    build: () => [generateBox({
+      ...base,
+      divisionsX: [50], divisionsZ: [50],
+      boxPattern: 'circles', fingerSlotAxes: 'both',
+      customHoles: [
+        makeCustomHole({ face: 'front', shape: 'hexagons', size: 10, posU: 20, posV: 80 }),
+        makeCustomHole({ face: 'back', shape: 'slots', size: 10, posU: 80, posV: 20 }),
+      ],
+    })],
+  },
+  {
+    name: 'box · custom hole on back wall with hinge',
+    build: () => {
+      const p = {
+        ...base, includeLid: true, includeHinge: true,
+        customHoles: [makeCustomHole({ face: 'back', shape: 'circles', size: 10, posU: 50, posV: 10 })],
+      }
       return [generateBox(p), generateBoxHingeKnuckles(p)]
     },
   },

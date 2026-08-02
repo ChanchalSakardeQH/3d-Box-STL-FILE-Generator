@@ -12,6 +12,40 @@ export type LidPattern = 'none' | 'circles' | 'squares' | 'diamonds' | 'hexagons
 
 export type FingerSlotAxes = 'none' | 'x' | 'z' | 'both'
 
+// A single standalone hole, independently sized and positioned — unlike the
+// repeating boxPattern/lidPattern grids, this cuts exactly one opening.
+export type CustomHoleShape = Exclude<LidPattern, 'none'>
+export type CustomHoleFace = 'front' | 'back' | 'left' | 'right' | 'floor'
+
+export const CUSTOM_HOLE_FACES: { value: CustomHoleFace; label: string }[] = [
+  { value: 'front', label: 'Front Wall' },
+  { value: 'back', label: 'Back Wall' },
+  { value: 'left', label: 'Left Wall' },
+  { value: 'right', label: 'Right Wall' },
+  { value: 'floor', label: 'Floor' },
+]
+
+export interface CustomHole {
+  id: string
+  face: CustomHoleFace
+  shape: CustomHoleShape
+  size: number    // feature size across, in mm
+  posU: number    // 0-100 position along the wall's/floor's horizontal span
+  posV: number    // 0-100 position: up the wall (side faces) or along the floor's depth
+}
+
+export function makeCustomHole(overrides?: Partial<CustomHole>): CustomHole {
+  return {
+    id: Math.random().toString(36).slice(2, 10),
+    face: 'front',
+    shape: 'circles',
+    size: 10,
+    posU: 50,
+    posV: 50,
+    ...overrides,
+  }
+}
+
 export const LID_PATTERNS: { value: LidPattern; label: string }[] = [
   { value: 'none', label: 'None' },
   { value: 'circles', label: 'Circles' },
@@ -21,6 +55,9 @@ export const LID_PATTERNS: { value: LidPattern; label: string }[] = [
   { value: 'triangles', label: 'Triangles' },
   { value: 'slots', label: 'Slots' },
 ]
+
+export const CUSTOM_HOLE_SHAPES = LID_PATTERNS.filter(p => p.value !== 'none') as
+  { value: Exclude<LidPattern, 'none'>; label: string }[]
 
 export interface BoxParams {
   width: number
@@ -44,6 +81,7 @@ export interface BoxParams {
   boxPattern: LidPattern       // cutout pattern through the box's 4 outer side walls
   boxPatternSize: number       // feature size across, in mm
   boxPatternSpacing: number    // gap between features, in mm
+  customHoles: CustomHole[]    // standalone holes, individually sized/placed on a wall or the floor
   fingerSlotAxes: FingerSlotAxes // finger-access notches cut down from the top edge
   fingerSlotWidth: number      // notch width along the wall, in mm
   fingerSlotDepth: number      // how far down from the top edge, in mm
@@ -296,6 +334,8 @@ export function generateBox(params: BoxParams) {
   }
   const fingerSlots = fingerSlotCutouts(params)
   if (fingerSlots) holeSolids.push(fingerSlots)
+  const customHoles = customHoleCutouts(params)
+  if (customHoles) holeSolids.push(customHoles)
   const holes = unionAll(holeSolids)
   if (holes) box = subtract(asGeom3(box), holes)
   return box
@@ -644,6 +684,80 @@ function boxFloorHoles(params: BoxParams): any | null {
     boxPattern, Math.max(2, params.boxPatternSize), Math.max(1.5, params.boxPatternSpacing),
     region, -h2 - 0.5, -h2 + wt + 0.5, exclusions
   )
+}
+
+/**
+ * Standalone custom holes: each one independently placed on a single wall or
+ * the floor, sized and positioned via percentage sliders (posU/posV) so the
+ * placement stays sane regardless of the box's current dimensions. Reuses
+ * the same shape library and wall-punching geometry as the repeating
+ * boxPattern grid (see boxWallHoles/boxFloorHoles), just for a single feature
+ * instead of a tiled array.
+ *
+ * posU/posV are clamped so the hole's own footprint never hangs off the edge
+ * of its wall/floor — 0% and 100% land the hole just inside the safe margin,
+ * not with its center at the literal corner.
+ */
+function customHoleCutouts(params: BoxParams): any | null {
+  const { width, depth, height, wallThickness: wt, chamferSize, customHoles } = params
+  if (!customHoles || customHoles.length === 0) return null
+
+  const w2 = width / 2, d2 = depth / 2, h2 = height / 2
+  const c = Math.min(chamferSize, wt, width / 4, depth / 4)
+  const iw2 = w2 - wt, id2 = d2 - wt
+  const h = wt + 1 // through-thickness prism, overshooting both faces slightly
+
+  const solids: any[] = []
+
+  for (const hole of customHoles) {
+    const size = Math.max(1, hole.size)
+    const shape2D = patternShape2D(hole.shape, size)
+    if (!shape2D) continue
+    const [hx, hy] = patternHalfExtents(hole.shape, size)
+    const prism = extrudeLinear({ height: h }, shape2D)
+    const pu = Math.min(Math.max(hole.posU, 0), 100) / 100
+    const pv = Math.min(Math.max(hole.posV, 0), 100) / 100
+
+    if (hole.face === 'floor') {
+      const marginX = 1.5 + hx, marginY = 1.5 + hy
+      const spanX = Math.max(0, 2 * iw2 - 2 * marginX)
+      const spanY = Math.max(0, 2 * id2 - 2 * marginY)
+      const x = -iw2 + marginX + pu * spanX
+      const y = -id2 + marginY + pv * spanY
+      solids.push(translate([x, y, -h2 - 0.5], prism))
+      continue
+    }
+
+    // Side walls: u runs along the wall's length, v runs up its height —
+    // margins keep the hole clear of corners/chamfers and the top rim/floor,
+    // same as boxWallHoles.
+    const marginV = wt + 2 + hy
+    const spanV = Math.max(0, height - 2 * marginV)
+    const v = -h2 + marginV + pv * spanV
+
+    if (hole.face === 'front' || hole.face === 'back') {
+      const marginU = Math.max(c, 1) + 2 + hx
+      const spanU = Math.max(0, width - 2 * marginU)
+      const u = -w2 + marginU + pu * spanU
+      if (hole.face === 'front') {
+        solids.push(translate([u, -d2 - 0.5, v], rotate([Math.PI / 2, 0, 0], prism)))
+      } else {
+        solids.push(translate([u, d2 + 0.5 - h, v], rotate([-Math.PI / 2, 0, 0], prism)))
+      }
+    } else {
+      const marginU = Math.max(c, 1) + 2 + hx
+      const spanU = Math.max(0, depth - 2 * marginU)
+      const u = -d2 + marginU + pu * spanU
+      const sidePrism = rotate([0, Math.PI / 2, 0], rotate([0, 0, Math.PI / 2], prism))
+      if (hole.face === 'left') {
+        solids.push(translate([-w2 - 0.5, u, v], sidePrism))
+      } else {
+        solids.push(translate([iw2 - 0.5, u, v], sidePrism))
+      }
+    }
+  }
+
+  return unionAll(solids)
 }
 
 // A padded Rect2 around geometry's XY bounding box (for text exclusion zones)

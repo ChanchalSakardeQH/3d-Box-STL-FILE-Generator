@@ -3,7 +3,7 @@ import { Label } from './ui/label'
 import { Slider } from './ui/slider'
 import { Button } from './ui/button'
 import { Save, RotateCcw, ChevronDown, Trash2, FileDown, FileUp, AlertTriangle, CheckCircle2, Link2, Check, Archive } from 'lucide-react'
-import { BoxParams, sleeveOuterDims, LID_PATTERNS, CustomHole, CUSTOM_HOLE_FACES, CUSTOM_HOLE_SHAPES, makeCustomHole } from '@/utils/boxGenerator'
+import { BoxParams, sleeveOuterDims, LID_PATTERNS, CustomHole, CUSTOM_HOLE_FACES, CUSTOM_HOLE_SHAPES, makeCustomHole, LidCustomHole, makeLidCustomHole } from '@/utils/boxGenerator'
 import { SavedProject, AppSettings, buildShareLink } from '@/utils/projectStorage'
 
 interface ControlPanelProps {
@@ -115,6 +115,21 @@ export function ControlPanel({
 
   const removeCustomHole = (id: string) => {
     onParamsChange({ ...params, customHoles: params.customHoles.filter(h => h.id !== id) })
+  }
+
+  const addLidCustomHole = () => {
+    onParamsChange({ ...params, lidCustomHoles: [...params.lidCustomHoles, makeLidCustomHole()] })
+  }
+
+  const updateLidCustomHole = (id: string, patch: Partial<LidCustomHole>) => {
+    onParamsChange({
+      ...params,
+      lidCustomHoles: params.lidCustomHoles.map(h => (h.id === id ? { ...h, ...patch } : h)),
+    })
+  }
+
+  const removeLidCustomHole = (id: string) => {
+    onParamsChange({ ...params, lidCustomHoles: params.lidCustomHoles.filter(h => h.id !== id) })
   }
 
   const generateFromVolume = () => {
@@ -1083,6 +1098,98 @@ export function ControlPanel({
                     </div>
                   )}
                 </div>
+
+                {/* Custom holes — lid cap only (the sleeve has its own Cutout Pattern above) */}
+                {!isSleeveStyle && (
+                  <div className="space-y-3 pt-3 border-t">
+                    <div className="flex justify-between items-center">
+                      <Label>Custom Holes</Label>
+                      <Button variant="outline" size="sm" onClick={addLidCustomHole}>
+                        + Add Hole
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      One-off holes on the lid cap — for cables, buttons, ventilation, or
+                      anything the repeating cutout pattern above doesn't cover. Position is a
+                      percentage across the cap, so it stays put if you resize the box. A hole
+                      that would overlap the text patch is skipped.
+                    </p>
+
+                    {params.lidCustomHoles.length === 0 && (
+                      <p className="text-xs text-muted-foreground italic">No custom holes yet.</p>
+                    )}
+
+                    {params.lidCustomHoles.map((hole, i) => (
+                      <div key={hole.id} className="space-y-3 rounded-md border p-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Hole {i + 1}</span>
+                          <button
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => removeLidCustomHole(hole.id)}
+                            aria-label="Remove hole"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-xs">Shape</Label>
+                          <select
+                            className="w-full rounded-md border bg-background px-2 py-1.5 text-sm"
+                            value={hole.shape}
+                            onChange={(e) => updateLidCustomHole(hole.id, { shape: e.target.value as LidCustomHole['shape'] })}
+                          >
+                            {CUSTOM_HOLE_SHAPES.map(({ value, label }) => (
+                              <option key={value} value={value}>{label}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs">Size (mm)</Label>
+                            <span className="text-xs text-muted-foreground">{hole.size}</span>
+                          </div>
+                          <Slider
+                            min={2}
+                            max={40}
+                            step={0.5}
+                            value={hole.size}
+                            onValueChange={(value) => updateLidCustomHole(hole.id, { size: value })}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs">Position — Width (%)</Label>
+                            <span className="text-xs text-muted-foreground">{hole.posU}</span>
+                          </div>
+                          <Slider
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={hole.posU}
+                            onValueChange={(value) => updateLidCustomHole(hole.id, { posU: value })}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs">Position — Depth (%)</Label>
+                            <span className="text-xs text-muted-foreground">{hole.posV}</span>
+                          </div>
+                          <Slider
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={hole.posV}
+                            onValueChange={(value) => updateLidCustomHole(hole.id, { posV: value })}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Lid-only options */}
                 {params.lidStyle === 'lid' && !params.includeHinge && (

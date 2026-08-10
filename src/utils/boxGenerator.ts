@@ -46,6 +46,29 @@ export function makeCustomHole(overrides?: Partial<CustomHole>): CustomHole {
   }
 }
 
+// A standalone hole on the lid cap (or sleeve top — see note on generateLid),
+// positioned the same way as a box CustomHole's 'floor' case: a percentage
+// across the cap's usable footprint. There's only one place to put it (the
+// cap), so unlike CustomHole there's no `face` field.
+export interface LidCustomHole {
+  id: string
+  shape: CustomHoleShape
+  size: number    // feature size across, in mm
+  posU: number    // 0-100 position across the cap's width
+  posV: number    // 0-100 position across the cap's depth
+}
+
+export function makeLidCustomHole(overrides?: Partial<LidCustomHole>): LidCustomHole {
+  return {
+    id: Math.random().toString(36).slice(2, 10),
+    shape: 'circles',
+    size: 10,
+    posU: 50,
+    posV: 50,
+    ...overrides,
+  }
+}
+
 export const LID_PATTERNS: { value: LidPattern; label: string }[] = [
   { value: 'none', label: 'None' },
   { value: 'circles', label: 'Circles' },
@@ -82,6 +105,7 @@ export interface BoxParams {
   boxPatternSize: number       // feature size across, in mm
   boxPatternSpacing: number    // gap between features, in mm
   customHoles: CustomHole[]    // standalone holes, individually sized/placed on a wall or the floor
+  lidCustomHoles: LidCustomHole[] // standalone holes, individually sized/placed on the lid cap
   fingerSlotAxes: FingerSlotAxes // finger-access notches cut down from the top edge
   fingerSlotWidth: number      // notch width along the wall, in mm
   fingerSlotDepth: number      // how far down from the top edge, in mm
@@ -805,13 +829,64 @@ function lidPatternHoles(params: BoxParams, textGeometry?: any): any | null {
   return patternPrisms(params, region, -wt - 0.5, 0.5, exclusions)
 }
 
+/*
+ * Standalone custom holes on the lid cap — the lid-side counterpart to
+ * customHoleCutouts' 'floor' case. Placed in the lid's own frame (cap
+ * Z ∈ [-wt, 0]) and kept within the same safe region lidPatternHoles uses:
+ * inside the lip's inner footprint for a friction lid, or inset from the
+ * edge for a hinged slab. A hole that would land on the engraved/embossed
+ * text patch is skipped, same as the repeating cutout pattern does.
+ */
+function lidCustomHoleCutouts(params: BoxParams, textGeometry?: any): any | null {
+  const { width, depth, wallThickness: wt, lidTolerance: tol, includeHinge, lidCustomHoles } = params
+  if (!lidCustomHoles || lidCustomHoles.length === 0) return null
+  const w2 = width / 2
+  const d2 = depth / 2
+
+  let region: Rect2
+  if (includeHinge) {
+    const inset = wt + 2
+    region = { x0: -w2 + inset, x1: w2 - inset, y0: -d2 + inset, y1: d2 - inset }
+  } else {
+    const ix = w2 - wt - tol - wt - 1.5
+    const iy = d2 - wt - tol - wt - 1.5
+    region = { x0: -ix, x1: ix, y0: -iy, y1: iy }
+  }
+
+  const textRect = textGeometry ? boundsRect(textGeometry, 1.5, !includeHinge) : null
+
+  const solids: any[] = []
+  for (const hole of lidCustomHoles) {
+    const size = Math.max(1, hole.size)
+    const shape2D = patternShape2D(hole.shape, size)
+    if (!shape2D) continue
+    const [hx, hy] = patternHalfExtents(hole.shape, size)
+
+    const spanX = Math.max(0, (region.x1 - region.x0) - 2 * hx)
+    const spanY = Math.max(0, (region.y1 - region.y0) - 2 * hy)
+    const pu = Math.min(Math.max(hole.posU, 0), 100) / 100
+    const pv = Math.min(Math.max(hole.posV, 0), 100) / 100
+    const x = region.x0 + hx + pu * spanX
+    const y = region.y0 + hy + pv * spanY
+
+    if (textRect && x + hx > textRect.x0 && x - hx < textRect.x1 &&
+        y + hy > textRect.y0 && y - hy < textRect.y1) {
+      continue // keeps the text's solid patch, same as the repeating pattern
+    }
+
+    const prism = extrudeLinear({ height: wt + 1 }, shape2D)
+    solids.push(translate([x, y, -wt - 0.5], prism))
+  }
+  return unionAll(solids)
+}
+
 export function generateLid(params: BoxParams, textGeometry?: any) {
   // Text requires CSG operations (subtract/union)
   let lid = textGeometry ? generateLidCSG(params, textGeometry) : generateFlatLid(params)
-  if (params.lidPattern !== 'none') {
-    const holes = lidPatternHoles(params, textGeometry)
-    if (holes) lid = subtract(asGeom3(lid), holes)
-  }
+  const patternHoles = params.lidPattern !== 'none' ? lidPatternHoles(params, textGeometry) : null
+  const customHoles = lidCustomHoleCutouts(params, textGeometry)
+  const holes = patternHoles && customHoles ? union(patternHoles, customHoles) : (patternHoles || customHoles)
+  if (holes) lid = subtract(asGeom3(lid), holes)
   return lid
 }
 

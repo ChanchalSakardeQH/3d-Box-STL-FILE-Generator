@@ -1,4 +1,4 @@
-import { BoxParams, clampDivisionThickness, LID_PATTERNS, CUSTOM_HOLE_SHAPES, CUSTOM_HOLE_FACES, CustomHole } from './boxGenerator'
+import { BoxParams, clampDivisionThickness, LID_PATTERNS, CUSTOM_HOLE_SHAPES, CUSTOM_HOLE_FACES, CustomHole, LidCustomHole } from './boxGenerator'
 
 export const DEFAULTS: BoxParams = {
   width: 80,
@@ -23,6 +23,7 @@ export const DEFAULTS: BoxParams = {
   boxPatternSize: 8,
   boxPatternSpacing: 4,
   customHoles: [],
+  lidCustomHoles: [],
   fingerSlotAxes: 'none' as const,
   fingerSlotWidth: 15,
   fingerSlotDepth: 15,
@@ -121,6 +122,19 @@ export function normalizeParams(raw: unknown): BoxParams {
           posV: Math.min(Math.max(Number(raw.posV) ?? 50, 0), 100),
         }
       }).filter((h): h is CustomHole => h !== null)
+    : []
+  p.lidCustomHoles = Array.isArray(p.lidCustomHoles)
+    ? p.lidCustomHoles.map((h): LidCustomHole | null => {
+        const raw = (h && typeof h === 'object' ? h : {}) as Partial<LidCustomHole>
+        if (!CUSTOM_HOLE_SHAPES.some(o => o.value === raw.shape)) return null
+        return {
+          id: typeof raw.id === 'string' && raw.id ? raw.id : Math.random().toString(36).slice(2, 10),
+          shape: raw.shape!,
+          size: Math.min(Math.max(Number(raw.size) || 10, 1), 100),
+          posU: Math.min(Math.max(Number(raw.posU) ?? 50, 0), 100),
+          posV: Math.min(Math.max(Number(raw.posV) ?? 50, 0), 100),
+        }
+      }).filter((h): h is LidCustomHole => h !== null)
     : []
   return p
 }

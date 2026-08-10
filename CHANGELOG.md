@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 with date-based entries since the project has no version releases.
 
+## 2026-08-10
+
+### Added
+- **Custom holes for lids.** The Lid tab now supports individually placed custom holes, mirroring the Box tab's custom-hole workflow. Each hole can be configured by **shape, size, and position** (Width % / Depth %).
+- **Lid custom-hole geometry.** Added a `LidCustomHole` type and `makeLidCustomHole()` factory, plus `lidCustomHoleCutouts()` to punch holes through the lid cap in the lid's own Z frame. Holes remain inside the same safe region used by lid cutout patterns: inside the lip for friction-fit lids and inset from the edge for hinged lids.
+- **Text-safe lid holes.** Custom lid holes that would overlap the engraved/embossed text patch are skipped so the text area remains intact.
+- **Combined lid cutouts.** `generateLid()` now combines pattern holes and custom holes before subtracting them from the lid geometry.
+- **Project persistence for lid holes.** Added `lidCustomHoles: []` to project defaults and normalization/sanitization so saved, shared, and imported projects load safely. Older projects without the field automatically default to an empty custom-hole list.
+- **Lid Custom Holes controls.** Added controls and handlers to add, update, and remove custom lid holes. The section appears below Cutout Pattern in the Lid tab and is hidden for drawer-sleeve lids because sleeves do not have a cap.
+
 ## 2026-07-20
 
 ### Fixed

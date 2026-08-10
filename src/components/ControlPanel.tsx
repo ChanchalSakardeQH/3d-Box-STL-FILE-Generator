@@ -911,19 +911,62 @@ export function ControlPanel({
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-xs">Size (mm)</Label>
-                      <span className="text-xs text-muted-foreground">{hole.size}</span>
+                  {hole.shape === 'slots' && (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={hole.useCustomSlotSize}
+                        onChange={(e) => updateCustomHole(hole.id, { useCustomSlotSize: e.target.checked })}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm">Set width &amp; length separately</span>
+                    </label>
+                  )}
+
+                  {hole.shape === 'slots' && hole.useCustomSlotSize ? (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs">Width (mm)</Label>
+                          <span className="text-xs text-muted-foreground">{hole.slotWidth}</span>
+                        </div>
+                        <Slider
+                          min={2}
+                          max={80}
+                          step={0.5}
+                          value={hole.slotWidth}
+                          onValueChange={(value) => updateCustomHole(hole.id, { slotWidth: value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs">Length (mm)</Label>
+                          <span className="text-xs text-muted-foreground">{hole.slotLength}</span>
+                        </div>
+                        <Slider
+                          min={2}
+                          max={40}
+                          step={0.5}
+                          value={hole.slotLength}
+                          onValueChange={(value) => updateCustomHole(hole.id, { slotLength: value })}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-xs">Size (mm)</Label>
+                        <span className="text-xs text-muted-foreground">{hole.size}</span>
+                      </div>
+                      <Slider
+                        min={2}
+                        max={40}
+                        step={0.5}
+                        value={hole.size}
+                        onValueChange={(value) => updateCustomHole(hole.id, { size: value })}
+                      />
                     </div>
-                    <Slider
-                      min={2}
-                      max={40}
-                      step={0.5}
-                      value={hole.size}
-                      onValueChange={(value) => updateCustomHole(hole.id, { size: value })}
-                    />
-                  </div>
+                  )}
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
@@ -1145,19 +1188,62 @@ export function ControlPanel({
                           </select>
                         </div>
 
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label className="text-xs">Size (mm)</Label>
-                            <span className="text-xs text-muted-foreground">{hole.size}</span>
+                        {hole.shape === 'slots' && (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={hole.useCustomSlotSize}
+                              onChange={(e) => updateLidCustomHole(hole.id, { useCustomSlotSize: e.target.checked })}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <span className="text-sm">Set width &amp; length separately</span>
+                          </label>
+                        )}
+
+                        {hole.shape === 'slots' && hole.useCustomSlotSize ? (
+                          <>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs">Width (mm)</Label>
+                                <span className="text-xs text-muted-foreground">{hole.slotWidth}</span>
+                              </div>
+                              <Slider
+                                min={2}
+                                max={80}
+                                step={0.5}
+                                value={hole.slotWidth}
+                                onValueChange={(value) => updateLidCustomHole(hole.id, { slotWidth: value })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs">Length (mm)</Label>
+                                <span className="text-xs text-muted-foreground">{hole.slotLength}</span>
+                              </div>
+                              <Slider
+                                min={2}
+                                max={40}
+                                step={0.5}
+                                value={hole.slotLength}
+                                onValueChange={(value) => updateLidCustomHole(hole.id, { slotLength: value })}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label className="text-xs">Size (mm)</Label>
+                              <span className="text-xs text-muted-foreground">{hole.size}</span>
+                            </div>
+                            <Slider
+                              min={2}
+                              max={40}
+                              step={0.5}
+                              value={hole.size}
+                              onValueChange={(value) => updateLidCustomHole(hole.id, { size: value })}
+                            />
                           </div>
-                          <Slider
-                            min={2}
-                            max={40}
-                            step={0.5}
-                            value={hole.size}
-                            onValueChange={(value) => updateLidCustomHole(hole.id, { size: value })}
-                          />
-                        </div>
+                        )}
 
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">

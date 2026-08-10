@@ -118,6 +118,9 @@ export function normalizeParams(raw: unknown): BoxParams {
           face: raw.face!,
           shape: raw.shape!,
           size: Math.min(Math.max(Number(raw.size) || 10, 1), 100),
+          useCustomSlotSize: raw.useCustomSlotSize === true,
+          slotWidth: Math.min(Math.max(Number(raw.slotWidth) || 20, 1), 200),
+          slotLength: Math.min(Math.max(Number(raw.slotLength) || 4.5, 1), 200),
           posU: Math.min(Math.max(Number(raw.posU) ?? 50, 0), 100),
           posV: Math.min(Math.max(Number(raw.posV) ?? 50, 0), 100),
         }
@@ -131,6 +134,9 @@ export function normalizeParams(raw: unknown): BoxParams {
           id: typeof raw.id === 'string' && raw.id ? raw.id : Math.random().toString(36).slice(2, 10),
           shape: raw.shape!,
           size: Math.min(Math.max(Number(raw.size) || 10, 1), 100),
+          useCustomSlotSize: raw.useCustomSlotSize === true,
+          slotWidth: Math.min(Math.max(Number(raw.slotWidth) || 20, 1), 200),
+          slotLength: Math.min(Math.max(Number(raw.slotLength) || 4.5, 1), 200),
           posU: Math.min(Math.max(Number(raw.posU) ?? 50, 0), 100),
           posV: Math.min(Math.max(Number(raw.posV) ?? 50, 0), 100),
         }

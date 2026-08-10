@@ -14,6 +14,8 @@ with date-based entries since the project has no version releases.
 - **Project persistence for lid holes.** Added `lidCustomHoles: []` to project defaults and normalization/sanitization so saved, shared, and imported projects load safely. Older projects without the field automatically default to an empty custom-hole list.
 - **Lid Custom Holes controls.** Added controls and handlers to add, update, and remove custom lid holes. The section appears below Cutout Pattern in the Lid tab and is hidden for drawer-sleeve lids because sleeves do not have a cap.
 
+- **Independent slot dimensions for Custom Holes.** In both **Box → Custom Holes** and **Lid → Custom Holes**, selecting **Slots** now reveals a **Set width & length separately** option. When unchecked, the existing single **Size (mm)** control remains unchanged; when checked, it is replaced by independent **Width (2–80 mm)** and **Length (2–40 mm)** controls for creating long/thin or short/wide slots. Other hole shapes are unaffected.
+
 ## 2026-07-20
 
 ### Fixed

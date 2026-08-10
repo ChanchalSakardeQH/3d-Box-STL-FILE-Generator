@@ -29,7 +29,10 @@ export interface CustomHole {
   id: string
   face: CustomHoleFace
   shape: CustomHoleShape
-  size: number    // feature size across, in mm
+  size: number    // feature size across, in mm — used unless useCustomSlotSize is on (slots only)
+  useCustomSlotSize: boolean // slots only: when true, use slotWidth/slotLength instead of size
+  slotWidth: number   // slots only: independent width, in mm
+  slotLength: number  // slots only: independent length, in mm
   posU: number    // 0-100 position along the wall's/floor's horizontal span
   posV: number    // 0-100 position: up the wall (side faces) or along the floor's depth
 }
@@ -40,6 +43,9 @@ export function makeCustomHole(overrides?: Partial<CustomHole>): CustomHole {
     face: 'front',
     shape: 'circles',
     size: 10,
+    useCustomSlotSize: false,
+    slotWidth: 20,
+    slotLength: 4.5,
     posU: 50,
     posV: 50,
     ...overrides,
@@ -53,7 +59,10 @@ export function makeCustomHole(overrides?: Partial<CustomHole>): CustomHole {
 export interface LidCustomHole {
   id: string
   shape: CustomHoleShape
-  size: number    // feature size across, in mm
+  size: number    // feature size across, in mm — used unless useCustomSlotSize is on (slots only)
+  useCustomSlotSize: boolean // slots only: when true, use slotWidth/slotLength instead of size
+  slotWidth: number   // slots only: independent width, in mm
+  slotLength: number  // slots only: independent length, in mm
   posU: number    // 0-100 position across the cap's width
   posV: number    // 0-100 position across the cap's depth
 }
@@ -63,6 +72,9 @@ export function makeLidCustomHole(overrides?: Partial<LidCustomHole>): LidCustom
     id: Math.random().toString(36).slice(2, 10),
     shape: 'circles',
     size: 10,
+    useCustomSlotSize: false,
+    slotWidth: 20,
+    slotLength: 4.5,
     posU: 50,
     posV: 50,
     ...overrides,
@@ -475,7 +487,10 @@ interface Rect2 { x0: number; x1: number; y0: number; y1: number }
 // its CSG cut planes stop lining up with the straight-built geometry, and the
 // T-junction repair on export can no longer pair the resulting vertices —
 // which is exactly the "80 non-manifold edges" corruption slicers reported.
-function patternShape2D(pattern: LidPattern, size: number, flipped = false): any | null {
+// `slotDims`, when given, overrides the derived [width, length] used for a
+// 'slots' shape — lets a standalone custom hole size its slot independently
+// instead of deriving width/length from a single `size` value.
+function patternShape2D(pattern: LidPattern, size: number, flipped = false, slotDims?: [number, number]): any | null {
   const r = size / 2
   switch (pattern) {
     case 'circles': return circle({ radius: r, segments: 20 })
@@ -485,14 +500,21 @@ function patternShape2D(pattern: LidPattern, size: number, flipped = false): any
     case 'triangles': return flipped
       ? polygon({ points: [[0, -r], [r * 0.866, r / 2], [-r * 0.866, r / 2]] })
       : polygon({ points: [[0, r], [-r * 0.866, -r / 2], [r * 0.866, -r / 2]] })
-    case 'slots': return rectangle({ size: [size * 2, size * 0.45] })
+    case 'slots': {
+      const [sw, sl] = slotDims ?? [size * 2, size * 0.45]
+      return rectangle({ size: [sw, sl] })
+    }
     default: return null
   }
 }
 
 // Half extents of a hole's footprint (grid fitting + exclusion tests)
-function patternHalfExtents(pattern: LidPattern, size: number): [number, number] {
-  return pattern === 'slots' ? [size, size * 0.225] : [size / 2, size / 2]
+function patternHalfExtents(pattern: LidPattern, size: number, slotDims?: [number, number]): [number, number] {
+  if (pattern === 'slots') {
+    const [sw, sl] = slotDims ?? [size * 2, size * 0.45]
+    return [sw / 2, sl / 2]
+  }
+  return [size / 2, size / 2]
 }
 
 /**
@@ -735,9 +757,13 @@ function customHoleCutouts(params: BoxParams): any | null {
 
   for (const hole of customHoles) {
     const size = Math.max(1, hole.size)
-    const shape2D = patternShape2D(hole.shape, size)
+    const slotDims: [number, number] | undefined =
+      hole.shape === 'slots' && hole.useCustomSlotSize
+        ? [Math.max(1, hole.slotWidth), Math.max(1, hole.slotLength)]
+        : undefined
+    const shape2D = patternShape2D(hole.shape, size, false, slotDims)
     if (!shape2D) continue
-    const [hx, hy] = patternHalfExtents(hole.shape, size)
+    const [hx, hy] = patternHalfExtents(hole.shape, size, slotDims)
     const prism = extrudeLinear({ height: h }, shape2D)
     const pu = Math.min(Math.max(hole.posU, 0), 100) / 100
     const pv = Math.min(Math.max(hole.posV, 0), 100) / 100
@@ -858,9 +884,13 @@ function lidCustomHoleCutouts(params: BoxParams, textGeometry?: any): any | null
   const solids: any[] = []
   for (const hole of lidCustomHoles) {
     const size = Math.max(1, hole.size)
-    const shape2D = patternShape2D(hole.shape, size)
+    const slotDims: [number, number] | undefined =
+      hole.shape === 'slots' && hole.useCustomSlotSize
+        ? [Math.max(1, hole.slotWidth), Math.max(1, hole.slotLength)]
+        : undefined
+    const shape2D = patternShape2D(hole.shape, size, false, slotDims)
     if (!shape2D) continue
-    const [hx, hy] = patternHalfExtents(hole.shape, size)
+    const [hx, hy] = patternHalfExtents(hole.shape, size, slotDims)
 
     const spanX = Math.max(0, (region.x1 - region.x0) - 2 * hx)
     const spanY = Math.max(0, (region.y1 - region.y0) - 2 * hy)

@@ -121,6 +121,9 @@ export function normalizeParams(raw: unknown): BoxParams {
           useCustomSlotSize: raw.useCustomSlotSize === true,
           slotWidth: Math.min(Math.max(Number(raw.slotWidth) || 20, 1), 200),
           slotLength: Math.min(Math.max(Number(raw.slotLength) || 4.5, 1), 200),
+          cornerHoles: raw.cornerHoles === true,
+          cornerInsetX: Math.min(Math.max(Number(raw.cornerInsetX ?? (raw as any).cornerInset) || 8, 1), 200),
+          cornerInsetY: Math.min(Math.max(Number(raw.cornerInsetY ?? (raw as any).cornerInset) || 8, 1), 200),
           posU: Math.min(Math.max(Number(raw.posU) ?? 50, 0), 100),
           posV: Math.min(Math.max(Number(raw.posV) ?? 50, 0), 100),
         }
@@ -137,6 +140,9 @@ export function normalizeParams(raw: unknown): BoxParams {
           useCustomSlotSize: raw.useCustomSlotSize === true,
           slotWidth: Math.min(Math.max(Number(raw.slotWidth) || 20, 1), 200),
           slotLength: Math.min(Math.max(Number(raw.slotLength) || 4.5, 1), 200),
+          cornerHoles: raw.cornerHoles === true,
+          cornerInsetX: Math.min(Math.max(Number(raw.cornerInsetX ?? (raw as any).cornerInset) || 8, 1), 200),
+          cornerInsetY: Math.min(Math.max(Number(raw.cornerInsetY ?? (raw as any).cornerInset) || 8, 1), 200),
           posU: Math.min(Math.max(Number(raw.posU) ?? 50, 0), 100),
           posV: Math.min(Math.max(Number(raw.posV) ?? 50, 0), 100),
         }

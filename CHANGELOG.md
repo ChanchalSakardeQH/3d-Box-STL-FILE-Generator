@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 with date-based entries since the project has no version releases.
 
+## 2026-08-11
+
+### Added
+- **Corner screw holes for Custom Holes.** In both **Box → Custom Holes (Floor)** and **Lid → Custom Holes**, selecting the **Circles** shape now reveals an **Add 4 symmetric corner holes (for screws)** checkbox. When checked, the single positioned hole is replaced by four identical circular holes mirrored across all four corners — handy for mounting-screw patterns on an enclosure floor or lid. Two sliders, **Corner Inset — Width (mm)** and **Corner Inset — Depth (mm)** (2–40 mm each), control how far each hole sits from the nearest edge on each axis independently — so the four holes can form a rectangle matching real screw spacing, not just a square — and replace the Position % sliders while corner mode is on; unchecking it restores the normal single-hole position controls. Both insets are automatically clamped so holes never run off the part or overlap the lid's lip/hinge margins, and on the lid, corner holes still respect the engraved/embossed text exclusion zone just like a normal custom hole.
+- **Shift the whole corner-hole group.** The 4-hole rectangle doesn't have to stay centered on the floor or lid: two more sliders, **Shift Group — Width (%)** and **Shift Group — Depth (%)**, slide the entire group left/right and forward/back as a rigid block (50% = centered, matching the original behavior). How far it can slide is limited by the slack between the chosen Corner Inset and the minimum safe edge margin — a tight inset (holes already hugging the edge) leaves little or no room to shift.
+- Added `cornerHoles`/`cornerInsetX`/`cornerInsetY` fields to both `CustomHole` and `LidCustomHole`, a shared `clampCornerInset()` helper in `boxGenerator.ts`, and matching sanitization in `projectStorage.ts` so saved/shared/imported projects load safely (older projects default to `cornerHoles: false`; projects saved with the earlier single-value `cornerInset` field are read and applied to both axes automatically). The existing `posU`/`posV` fields are reused to drive the group-shift sliders when corner mode is on, rather than adding new fields.
+- Added `check:stl` mesh-integrity cases for corner screw holes (box floor, friction lid, hinged lid, lid text-exclusion interaction, and off-center group shifts at both slide extremes) and for slot custom holes with independent width/length, closing a gap in the existing sweep.
+
 ## 2026-08-10
 
 ### Added

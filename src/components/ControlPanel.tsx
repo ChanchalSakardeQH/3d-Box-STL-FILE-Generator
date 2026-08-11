@@ -968,37 +968,108 @@ export function ControlPanel({
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-xs">
-                        {hole.face === 'floor' ? 'Position — Width (%)' : 'Position — Along Wall (%)'}
-                      </Label>
-                      <span className="text-xs text-muted-foreground">{hole.posU}</span>
-                    </div>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={hole.posU}
-                      onValueChange={(value) => updateCustomHole(hole.id, { posU: value })}
-                    />
-                  </div>
+                  {hole.face === 'floor' && hole.shape === 'circles' && (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={hole.cornerHoles}
+                        onChange={(e) => updateCustomHole(hole.id, { cornerHoles: e.target.checked })}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm">Add 4 symmetric corner holes (for screws)</span>
+                    </label>
+                  )}
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-xs">
-                        {hole.face === 'floor' ? 'Position — Depth (%)' : 'Position — Height (%)'}
-                      </Label>
-                      <span className="text-xs text-muted-foreground">{hole.posV}</span>
-                    </div>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={hole.posV}
-                      onValueChange={(value) => updateCustomHole(hole.id, { posV: value })}
-                    />
-                  </div>
+                  {hole.face === 'floor' && hole.shape === 'circles' && hole.cornerHoles ? (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs">Corner Inset — Width (mm)</Label>
+                          <span className="text-xs text-muted-foreground">{hole.cornerInsetX}</span>
+                        </div>
+                        <Slider
+                          min={2}
+                          max={40}
+                          step={0.5}
+                          value={hole.cornerInsetX}
+                          onValueChange={(value) => updateCustomHole(hole.id, { cornerInsetX: value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs">Corner Inset — Depth (mm)</Label>
+                          <span className="text-xs text-muted-foreground">{hole.cornerInsetY}</span>
+                        </div>
+                        <Slider
+                          min={2}
+                          max={40}
+                          step={0.5}
+                          value={hole.cornerInsetY}
+                          onValueChange={(value) => updateCustomHole(hole.id, { cornerInsetY: value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs">Shift Group — Width (%)</Label>
+                          <span className="text-xs text-muted-foreground">{hole.posU}</span>
+                        </div>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={hole.posU}
+                          onValueChange={(value) => updateCustomHole(hole.id, { posU: value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs">Shift Group — Depth (%)</Label>
+                          <span className="text-xs text-muted-foreground">{hole.posV}</span>
+                        </div>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={hole.posV}
+                          onValueChange={(value) => updateCustomHole(hole.id, { posV: value })}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs">
+                            {hole.face === 'floor' ? 'Position — Width (%)' : 'Position — Along Wall (%)'}
+                          </Label>
+                          <span className="text-xs text-muted-foreground">{hole.posU}</span>
+                        </div>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={hole.posU}
+                          onValueChange={(value) => updateCustomHole(hole.id, { posU: value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs">
+                            {hole.face === 'floor' ? 'Position — Depth (%)' : 'Position — Height (%)'}
+                          </Label>
+                          <span className="text-xs text-muted-foreground">{hole.posV}</span>
+                        </div>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={hole.posV}
+                          onValueChange={(value) => updateCustomHole(hole.id, { posV: value })}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -1245,33 +1316,104 @@ export function ControlPanel({
                           </div>
                         )}
 
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label className="text-xs">Position — Width (%)</Label>
-                            <span className="text-xs text-muted-foreground">{hole.posU}</span>
-                          </div>
-                          <Slider
-                            min={0}
-                            max={100}
-                            step={1}
-                            value={hole.posU}
-                            onValueChange={(value) => updateLidCustomHole(hole.id, { posU: value })}
-                          />
-                        </div>
+                        {hole.shape === 'circles' && (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={hole.cornerHoles}
+                              onChange={(e) => updateLidCustomHole(hole.id, { cornerHoles: e.target.checked })}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <span className="text-sm">Add 4 symmetric corner holes (for screws)</span>
+                          </label>
+                        )}
 
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label className="text-xs">Position — Depth (%)</Label>
-                            <span className="text-xs text-muted-foreground">{hole.posV}</span>
-                          </div>
-                          <Slider
-                            min={0}
-                            max={100}
-                            step={1}
-                            value={hole.posV}
-                            onValueChange={(value) => updateLidCustomHole(hole.id, { posV: value })}
-                          />
-                        </div>
+                        {hole.shape === 'circles' && hole.cornerHoles ? (
+                          <>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs">Corner Inset — Width (mm)</Label>
+                                <span className="text-xs text-muted-foreground">{hole.cornerInsetX}</span>
+                              </div>
+                              <Slider
+                                min={2}
+                                max={40}
+                                step={0.5}
+                                value={hole.cornerInsetX}
+                                onValueChange={(value) => updateLidCustomHole(hole.id, { cornerInsetX: value })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs">Corner Inset — Depth (mm)</Label>
+                                <span className="text-xs text-muted-foreground">{hole.cornerInsetY}</span>
+                              </div>
+                              <Slider
+                                min={2}
+                                max={40}
+                                step={0.5}
+                                value={hole.cornerInsetY}
+                                onValueChange={(value) => updateLidCustomHole(hole.id, { cornerInsetY: value })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs">Shift Group — Width (%)</Label>
+                                <span className="text-xs text-muted-foreground">{hole.posU}</span>
+                              </div>
+                              <Slider
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={hole.posU}
+                                onValueChange={(value) => updateLidCustomHole(hole.id, { posU: value })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs">Shift Group — Depth (%)</Label>
+                                <span className="text-xs text-muted-foreground">{hole.posV}</span>
+                              </div>
+                              <Slider
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={hole.posV}
+                                onValueChange={(value) => updateLidCustomHole(hole.id, { posV: value })}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs">Position — Width (%)</Label>
+                                <span className="text-xs text-muted-foreground">{hole.posU}</span>
+                              </div>
+                              <Slider
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={hole.posU}
+                                onValueChange={(value) => updateLidCustomHole(hole.id, { posU: value })}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Label className="text-xs">Position — Depth (%)</Label>
+                                <span className="text-xs text-muted-foreground">{hole.posV}</span>
+                              </div>
+                              <Slider
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={hole.posV}
+                                onValueChange={(value) => updateLidCustomHole(hole.id, { posV: value })}
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>

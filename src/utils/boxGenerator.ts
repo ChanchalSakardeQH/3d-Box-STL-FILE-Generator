@@ -33,8 +33,11 @@ export interface CustomHole {
   useCustomSlotSize: boolean // slots only: when true, use slotWidth/slotLength instead of size
   slotWidth: number   // slots only: independent width, in mm
   slotLength: number  // slots only: independent length, in mm
-  posU: number    // 0-100 position along the wall's/floor's horizontal span
-  posV: number    // 0-100 position: up the wall (side faces) or along the floor's depth
+  cornerHoles: boolean // circles + floor only: place 4 symmetric corner holes (e.g. for mounting screws) instead of one
+  cornerInsetX: number // mm from the left/right edges to a corner hole's center, when cornerHoles is on
+  cornerInsetY: number // mm from the front/back edges to a corner hole's center, when cornerHoles is on
+  posU: number    // 0-100 position along the wall's/floor's horizontal span; when cornerHoles is on, slides the whole 4-hole group left/right instead (50 = centered)
+  posV: number    // 0-100 position: up the wall (side faces) or along the floor's depth; when cornerHoles is on, slides the whole 4-hole group forward/back instead (50 = centered)
 }
 
 export function makeCustomHole(overrides?: Partial<CustomHole>): CustomHole {
@@ -46,6 +49,9 @@ export function makeCustomHole(overrides?: Partial<CustomHole>): CustomHole {
     useCustomSlotSize: false,
     slotWidth: 20,
     slotLength: 4.5,
+    cornerHoles: false,
+    cornerInsetX: 8,
+    cornerInsetY: 8,
     posU: 50,
     posV: 50,
     ...overrides,
@@ -63,8 +69,11 @@ export interface LidCustomHole {
   useCustomSlotSize: boolean // slots only: when true, use slotWidth/slotLength instead of size
   slotWidth: number   // slots only: independent width, in mm
   slotLength: number  // slots only: independent length, in mm
-  posU: number    // 0-100 position across the cap's width
-  posV: number    // 0-100 position across the cap's depth
+  cornerHoles: boolean // circles only: place 4 symmetric corner holes (e.g. for mounting screws) instead of one
+  cornerInsetX: number // mm from the left/right edges to a corner hole's center, when cornerHoles is on
+  cornerInsetY: number // mm from the front/back edges to a corner hole's center, when cornerHoles is on
+  posU: number    // 0-100 position across the cap's width; when cornerHoles is on, slides the whole 4-hole group left/right instead (50 = centered)
+  posV: number    // 0-100 position across the cap's depth; when cornerHoles is on, slides the whole 4-hole group forward/back instead (50 = centered)
 }
 
 export function makeLidCustomHole(overrides?: Partial<LidCustomHole>): LidCustomHole {
@@ -75,6 +84,9 @@ export function makeLidCustomHole(overrides?: Partial<LidCustomHole>): LidCustom
     useCustomSlotSize: false,
     slotWidth: 20,
     slotLength: 4.5,
+    cornerHoles: false,
+    cornerInsetX: 8,
+    cornerInsetY: 8,
     posU: 50,
     posV: 50,
     ...overrides,
@@ -517,6 +529,14 @@ function patternHalfExtents(pattern: LidPattern, size: number, slotDims?: [numbe
   return [size / 2, size / 2]
 }
 
+// Clamp a corner hole's edge inset so its footprint (half-extent `he`) always
+// stays within the available half-span (`half`), with a small safety pad.
+function clampCornerInset(inset: number, half: number, he: number, pad = 1.5): number {
+  const lo = he + pad
+  const hi = Math.max(lo, half - he - pad)
+  return Math.min(Math.max(inset, lo), hi)
+}
+
 /**
  * Grid of (x, y) hole centers within a 2D region, honoring exclusion rects.
  * Shared by every cutout context (lid cap, sleeve walls, box walls) — each
@@ -769,6 +789,28 @@ function customHoleCutouts(params: BoxParams): any | null {
     const pv = Math.min(Math.max(hole.posV, 0), 100) / 100
 
     if (hole.face === 'floor') {
+      if (hole.shape === 'circles' && hole.cornerHoles) {
+        const insetX = clampCornerInset(hole.cornerInsetX, iw2, hx)
+        const insetY = clampCornerInset(hole.cornerInsetY, id2, hy)
+        const halfSpreadX = iw2 - insetX
+        const halfSpreadY = id2 - insetY
+        const marginX = 1.5 + hx, marginY = 1.5 + hy
+        // The 4-hole group can slide as a rigid block; how far depends on the
+        // slack between the chosen inset and the minimum safe margin — a
+        // tight inset (holes already near the edge) leaves no room to shift.
+        const slideX = Math.max(0, insetX - marginX)
+        const slideY = Math.max(0, insetY - marginY)
+        const offsetX = (pu * 2 - 1) * slideX
+        const offsetY = (pv * 2 - 1) * slideY
+        for (const sx of [-1, 1]) {
+          for (const sy of [-1, 1]) {
+            const x = offsetX + sx * halfSpreadX
+            const y = offsetY + sy * halfSpreadY
+            solids.push(translate([x, y, -h2 - 0.5], prism))
+          }
+        }
+        continue
+      }
       const marginX = 1.5 + hx, marginY = 1.5 + hy
       const spanX = Math.max(0, 2 * iw2 - 2 * marginX)
       const spanY = Math.max(0, 2 * id2 - 2 * marginY)
@@ -892,6 +934,40 @@ function lidCustomHoleCutouts(params: BoxParams, textGeometry?: any): any | null
     if (!shape2D) continue
     const [hx, hy] = patternHalfExtents(hole.shape, size, slotDims)
 
+    const prism = extrudeLinear({ height: wt + 1 }, shape2D)
+
+    if (hole.shape === 'circles' && hole.cornerHoles) {
+      const halfX = (region.x1 - region.x0) / 2
+      const halfY = (region.y1 - region.y0) / 2
+      const cx = (region.x0 + region.x1) / 2
+      const cy = (region.y0 + region.y1) / 2
+      const insetX = clampCornerInset(hole.cornerInsetX, halfX, hx)
+      const insetY = clampCornerInset(hole.cornerInsetY, halfY, hy)
+      const halfSpreadX = halfX - insetX
+      const halfSpreadY = halfY - insetY
+      // The 4-hole group can slide as a rigid block; how far depends on the
+      // slack between the chosen inset and the minimum safe margin (matching
+      // clampCornerInset's own pad) — a tight inset leaves no room to shift.
+      const slideX = Math.max(0, insetX - (hx + 1.5))
+      const slideY = Math.max(0, insetY - (hy + 1.5))
+      const pu = Math.min(Math.max(hole.posU, 0), 100) / 100
+      const pv = Math.min(Math.max(hole.posV, 0), 100) / 100
+      const offsetX = (pu * 2 - 1) * slideX
+      const offsetY = (pv * 2 - 1) * slideY
+      for (const sx of [-1, 1]) {
+        for (const sy of [-1, 1]) {
+          const x = cx + offsetX + sx * halfSpreadX
+          const y = cy + offsetY + sy * halfSpreadY
+          if (textRect && x + hx > textRect.x0 && x - hx < textRect.x1 &&
+              y + hy > textRect.y0 && y - hy < textRect.y1) {
+            continue // keeps the text's solid patch, same as the repeating pattern
+          }
+          solids.push(translate([x, y, -wt - 0.5], prism))
+        }
+      }
+      continue
+    }
+
     const spanX = Math.max(0, (region.x1 - region.x0) - 2 * hx)
     const spanY = Math.max(0, (region.y1 - region.y0) - 2 * hy)
     const pu = Math.min(Math.max(hole.posU, 0), 100) / 100
@@ -904,7 +980,6 @@ function lidCustomHoleCutouts(params: BoxParams, textGeometry?: any): any | null
       continue // keeps the text's solid patch, same as the repeating pattern
     }
 
-    const prism = extrudeLinear({ height: wt + 1 }, shape2D)
     solids.push(translate([x, y, -wt - 0.5], prism))
   }
   return unionAll(solids)

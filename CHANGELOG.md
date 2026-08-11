@@ -11,6 +11,17 @@ with date-based entries since the project has no version releases.
 - **Shift the whole corner-hole group.** The 4-hole rectangle doesn't have to stay centered on the floor or lid: two more sliders, **Shift Group — Width (%)** and **Shift Group — Depth (%)**, slide the entire group left/right and forward/back as a rigid block (50% = centered, matching the original behavior). How far it can slide is limited by the slack between the chosen Corner Inset and the minimum safe edge margin — a tight inset (holes already hugging the edge) leaves little or no room to shift.
 - Added `cornerHoles`/`cornerInsetX`/`cornerInsetY` fields to both `CustomHole` and `LidCustomHole`, a shared `clampCornerInset()` helper in `boxGenerator.ts`, and matching sanitization in `projectStorage.ts` so saved/shared/imported projects load safely (older projects default to `cornerHoles: false`; projects saved with the earlier single-value `cornerInset` field are read and applied to both axes automatically). The existing `posU`/`posV` fields are reused to drive the group-shift sliders when corner mode is on, rather than adding new fields.
 - Added `check:stl` mesh-integrity cases for corner screw holes (box floor, friction lid, hinged lid, lid text-exclusion interaction, and off-center group shifts at both slide extremes) and for slot custom holes with independent width/length, closing a gap in the existing sweep.
+- Added a **"Spec Sheet (PDF)"** export button next to your existing "Export all" control. Here's what changed:
+
+  **New file:** `src/utils/specSheetExporter.ts` — builds a multi-page PDF (via a new `jspdf` dependency, added to `package.json`) with:
+
+  - **Overview** — outer dimensions, wall thickness, chamfer, lid/sleeve style, total estimated PLA weight, print-bed fit check
+  - **Box body** — outer/inner footprint, inner height, volume/weight, and a **table of every compartment's exact interior size in mm** (computed from your divider positions + thickness, not just raw percentages)
+  - **Box custom holes** — face, shape, size (or slot W×L), and position for each one
+  - **Finger slots**, if enabled
+  - **Lid or sleeve** — cap/lip dimensions and tolerance, or sleeve outer size and sliding fit; hinge specs (count, barrel/pin diameter) if present; engraved/embossed text details; lid cutout pattern; lid custom holes table
+  - **3D print files** — the exact STL filenames it'll produce, so the sheet and the files stay matched up
+  - A short note on the PLA weight assumption and a reminder to verify tolerances before printing
 
 ## 2026-08-10
 
@@ -145,9 +156,9 @@ with date-based entries since the project has no version releases.
   - The alternating (upside-down) triangle prisms are now built from exact
     mirrored coordinates instead of `rotate(π)`, avoiding 1e-16 skew in
     their cut planes.
-  All parts × all patterns × chamfer/divider/hinge combinations now export
-  watertight (0 open, 0 non-manifold, 0 flipped edges, holes verified by
-  volume) in an automated mesh-integrity sweep.
+    All parts × all patterns × chamfer/divider/hinge combinations now export
+    watertight (0 open, 0 non-manifold, 0 flipped edges, holes verified by
+    volume) in an automated mesh-integrity sweep.
 
 ### Added
 - **Box wall and floor cutout patterns.** The Box tab now has the same cutout

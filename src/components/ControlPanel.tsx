@@ -3,7 +3,7 @@ import { Label } from './ui/label'
 import { Slider } from './ui/slider'
 import { Button } from './ui/button'
 import { Save, RotateCcw, ChevronDown, Trash2, FileDown, FileUp, AlertTriangle, CheckCircle2, Link2, Check, Archive } from 'lucide-react'
-import { BoxParams, sleeveOuterDims, LID_PATTERNS, CustomHole, CUSTOM_HOLE_FACES, CUSTOM_HOLE_SHAPES, makeCustomHole, LidCustomHole, makeLidCustomHole } from '@/utils/boxGenerator'
+import { BoxParams, sleeveOuterDims, LID_PATTERNS, CustomHole, CUSTOM_HOLE_FACES, CUSTOM_HOLE_SHAPES, makeCustomHole, LidCustomHole, makeLidCustomHole, lidCustomHoleMaxDims } from '@/utils/boxGenerator'
 import { SavedProject, AppSettings, buildShareLink } from '@/utils/projectStorage'
 
 interface ControlPanelProps {
@@ -1298,7 +1298,10 @@ export function ControlPanel({
                 </div>
 
                 {/* Custom holes — lid cap only (the sleeve has its own Cutout Pattern above) */}
-                {!isSleeveStyle && (
+                {!isSleeveStyle && (() => {
+                  const { maxWidth: lidHoleMaxW, maxLength: lidHoleMaxL } = lidCustomHoleMaxDims(params)
+                  const lidHoleMaxSize = Math.min(lidHoleMaxW, lidHoleMaxL)
+                  return (
                   <div className="space-y-3 pt-3 border-t">
                     <div className="flex justify-between items-center">
                       <Label>Custom Holes</Label>
@@ -1364,7 +1367,7 @@ export function ControlPanel({
                               </div>
                               <Slider
                                 min={2}
-                                max={80}
+                                max={lidHoleMaxW}
                                 step={0.5}
                                 value={hole.slotWidth}
                                 onValueChange={(value) => updateLidCustomHole(hole.id, { slotWidth: value })}
@@ -1377,12 +1380,16 @@ export function ControlPanel({
                               </div>
                               <Slider
                                 min={2}
-                                max={40}
+                                max={lidHoleMaxL}
                                 step={0.5}
                                 value={hole.slotLength}
                                 onValueChange={(value) => updateLidCustomHole(hole.id, { slotLength: value })}
                               />
                             </div>
+                            <p className="text-xs text-muted-foreground">
+                              Max width/length scales with the box's own size, wall thickness, and Fit
+                              Tolerance, so the hole always stays inside the lid's safe area.
+                            </p>
                           </>
                         ) : (
                           <div className="space-y-2">
@@ -1392,7 +1399,7 @@ export function ControlPanel({
                             </div>
                             <Slider
                               min={2}
-                              max={40}
+                              max={lidHoleMaxSize}
                               step={0.5}
                               value={hole.size}
                               onValueChange={(value) => updateLidCustomHole(hole.id, { size: value })}
@@ -1501,7 +1508,8 @@ export function ControlPanel({
                       </div>
                     ))}
                   </div>
-                )}
+                  )
+                })()}
 
                 {/* Lid-only options */}
                 {params.lidStyle === 'lid' && !params.includeHinge && (

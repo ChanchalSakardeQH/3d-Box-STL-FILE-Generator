@@ -901,6 +901,32 @@ function asGeom3(g: any): any {
   return g && g.transforms ? g : geom3.create(g.polygons)
 }
 
+/**
+ * Largest width/length (mm) a lid-cap custom hole can have before it starts
+ * cutting into the lip walls above the cap (friction lid) or the solid
+ * border around a hinged slab. Scales with the box's actual width/depth,
+ * wall thickness, and — for a friction lid — the lid's Fit Tolerance, since
+ * a looser fit shrinks the lip's inner footprint the cap must stay clear of.
+ * Mirrors the safe-area math in lidPatternHoles / lidCustomHoleCutouts, so
+ * a slider capped at these values can never suggest a size the geometry
+ * would then have to clip.
+ */
+export function lidCustomHoleMaxDims(params: BoxParams): { maxWidth: number; maxLength: number } {
+  const { width, depth, wallThickness: wt, lidTolerance: tol, includeHinge } = params
+  const w2 = width / 2
+  const d2 = depth / 2
+  let ix: number, iy: number
+  if (includeHinge) {
+    const inset = wt + 2
+    ix = w2 - inset
+    iy = d2 - inset
+  } else {
+    ix = w2 - wt - tol - wt - 1.5
+    iy = d2 - wt - tol - wt - 1.5
+  }
+  return { maxWidth: Math.max(2, ix * 2), maxLength: Math.max(2, iy * 2) }
+}
+
 // Pattern holes for the lid cap, in the standard lid frame (cap Z ∈ [-wt, 0])
 function lidPatternHoles(params: BoxParams, textGeometry?: any): any | null {
   const { width, depth, wallThickness: wt, lidTolerance: tol, includeHinge } = params
@@ -960,12 +986,17 @@ function lidCustomHoleCutouts(params: BoxParams, textGeometry?: any): any | null
 
   const textRect = textGeometry ? boundsRect(textGeometry, 1.5, !includeHinge) : null
 
+  // Safety clamp: if the box was resized smaller after a hole's dimensions
+  // were set, keep the hole from growing past the cap's safe area rather
+  // than cutting into the lip walls (or off the slab edge for a hinged lid).
+  const { maxWidth: capMaxW, maxLength: capMaxL } = lidCustomHoleMaxDims(params)
+
   const solids: any[] = []
   for (const hole of lidCustomHoles) {
-    const size = Math.max(1, hole.size)
+    const size = Math.min(Math.max(1, hole.size), Math.min(capMaxW, capMaxL))
     const slotDims: [number, number] | undefined =
       hole.shape === 'slots' && hole.useCustomSlotSize
-        ? [Math.max(1, hole.slotWidth), Math.max(1, hole.slotLength)]
+        ? [Math.min(Math.max(1, hole.slotWidth), capMaxW), Math.min(Math.max(1, hole.slotLength), capMaxL)]
         : undefined
     const shape2D = patternShape2D(hole.shape, size, false, slotDims)
     if (!shape2D) continue

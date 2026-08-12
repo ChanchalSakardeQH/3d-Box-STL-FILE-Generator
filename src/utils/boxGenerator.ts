@@ -125,6 +125,10 @@ export interface BoxParams {
   lidPattern: LidPattern       // cutout pattern through the lid cap / sleeve walls
   lidPatternSize: number       // feature size across, in mm
   lidPatternSpacing: number    // gap between features, in mm
+  lidPatternCoverageX: number  // % of the available lid-cap width the pattern region spans (10-100)
+  lidPatternCoverageY: number  // % of the available lid-cap depth the pattern region spans (10-100)
+  lidPatternOffsetX: number    // % slide of the pattern region within its leftover slack, -100 (left) .. 100 (right)
+  lidPatternOffsetY: number    // % slide of the pattern region within its leftover slack, -100 (front) .. 100 (back)
   boxPattern: LidPattern       // cutout pattern through the box's 4 outer side walls
   boxPatternSize: number       // feature size across, in mm
   boxPatternSpacing: number    // gap between features, in mm
@@ -491,6 +495,33 @@ function fingerSlotCutouts(params: BoxParams): any | null {
 // solid material.
 
 interface Rect2 { x0: number; x1: number; y0: number; y1: number }
+
+/**
+ * Shrinks a pattern region to a scalable, positionable sub-area — e.g. "only
+ * the left half" or "a quarter, pushed into the back-right corner". coverage
+ * (10-100%) scales the region's width/depth down from its full available
+ * size; offset (-100..100%) then slides that smaller box through the
+ * leftover slack, where 0 stays centred, -100 hugs the x0/y0 edge, and 100
+ * hugs the x1/y1 edge. Coverage of 100 with offset 0 is a no-op (the
+ * original full-area behaviour).
+ */
+function applyRegionCoverage(
+  region: Rect2, coverageX: number, coverageY: number, offsetX: number, offsetY: number
+): Rect2 {
+  const cx = Math.min(Math.max(coverageX, 10), 100) / 100
+  const cy = Math.min(Math.max(coverageY, 10), 100) / 100
+  const ox = Math.min(Math.max(offsetX, -100), 100) / 100
+  const oy = Math.min(Math.max(offsetY, -100), 100) / 100
+  const W0 = region.x1 - region.x0
+  const D0 = region.y1 - region.y0
+  const newW = W0 * cx
+  const newD = D0 * cy
+  const slackX = (W0 - newW) / 2
+  const slackY = (D0 - newD) / 2
+  const centerX = (region.x0 + region.x1) / 2 + ox * slackX
+  const centerY = (region.y0 + region.y1) / 2 + oy * slackY
+  return { x0: centerX - newW / 2, x1: centerX + newW / 2, y0: centerY - newD / 2, y1: centerY + newD / 2 }
+}
 
 // 2D shape for one hole, centered at the origin. `size` is the across dimension.
 // `flipped` (triangles only) builds the 180°-rotated shape from exact mirrored
@@ -888,6 +919,12 @@ function lidPatternHoles(params: BoxParams, textGeometry?: any): any | null {
     const iy = d2 - wt - tol - wt - 1.5
     region = { x0: -ix, x1: ix, y0: -iy, y1: iy }
   }
+
+  region = applyRegionCoverage(
+    region,
+    params.lidPatternCoverageX, params.lidPatternCoverageY,
+    params.lidPatternOffsetX, params.lidPatternOffsetY
+  )
 
   const exclusions: Rect2[] = []
   if (textGeometry) {

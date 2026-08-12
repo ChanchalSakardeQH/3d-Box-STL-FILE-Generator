@@ -1209,6 +1209,90 @@ export function ControlPanel({
                           Wider spacing means a stronger part; larger cutouts save more filament.
                         </p>
                       </div>
+
+                      {!isSleeveStyle && (
+                        <div className="space-y-4 pt-1 border-t">
+                          <p className="text-xs text-muted-foreground pt-3">
+                            Shrink the cutout area to cover only part of the lid — half, a quarter, or any custom
+                            size — then slide it to where you want it.
+                          </p>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label>Coverage Width (%)</Label>
+                              <span className="text-sm text-muted-foreground">{params.lidPatternCoverageX}</span>
+                            </div>
+                            <Slider
+                              min={10}
+                              max={100}
+                              step={5}
+                              value={params.lidPatternCoverageX}
+                              onValueChange={(value) => updateParam('lidPatternCoverageX', value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label>Coverage Depth (%)</Label>
+                              <span className="text-sm text-muted-foreground">{params.lidPatternCoverageY}</span>
+                            </div>
+                            <Slider
+                              min={10}
+                              max={100}
+                              step={5}
+                              value={params.lidPatternCoverageY}
+                              onValueChange={(value) => updateParam('lidPatternCoverageY', value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              100% × 100% covers the whole lid. 50% × 100% is a half; 50% × 50% is a quarter.
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label>Position X (%)</Label>
+                              <span className="text-sm text-muted-foreground">{params.lidPatternOffsetX}</span>
+                            </div>
+                            <Slider
+                              min={-100}
+                              max={100}
+                              step={5}
+                              value={params.lidPatternOffsetX}
+                              onValueChange={(value) => updateParam('lidPatternOffsetX', value)}
+                              disabled={params.lidPatternCoverageX >= 100}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label>Position Y (%)</Label>
+                              <span className="text-sm text-muted-foreground">{params.lidPatternOffsetY}</span>
+                            </div>
+                            <Slider
+                              min={-100}
+                              max={100}
+                              step={5}
+                              value={params.lidPatternOffsetY}
+                              onValueChange={(value) => updateParam('lidPatternOffsetY', value)}
+                              disabled={params.lidPatternCoverageY >= 100}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Slides the cutout area within the lid once it's smaller than 100% — 0 is centred,
+                              -100/100 push it to the opposite edges.
+                            </p>
+                          </div>
+                          {(params.lidPatternCoverageX < 100 || params.lidPatternCoverageY < 100) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                updateParam('lidPatternCoverageX', 100)
+                                updateParam('lidPatternCoverageY', 100)
+                                updateParam('lidPatternOffsetX', 0)
+                                updateParam('lidPatternOffsetY', 0)
+                              }}
+                            >
+                              Reset to full lid
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

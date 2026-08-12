@@ -21,7 +21,7 @@ A web-based parametric box generator for 3D printing. Design custom boxes with c
   - **Drawer sleeve** — open-front cover the box slides into, with optional finger notches
   - **Hinged lid** — flat lid with pin-less snap hinges (1–3 along the back edge); the printed lid snaps into the box, no assembly hardware
   
-- **Lid decoration** — engraved or embossed text/emoji (rotatable in 90° steps) and cutout patterns (circles, squares, diamonds, hexagons, triangles, slots)
+- **Lid decoration** — engraved or embossed text/emoji (rotatable in 90° steps) and cutout patterns (circles, squares, diamonds, hexagons, triangles, slots), with configurable coverage width/depth and X/Y positioning on the lid cap
 
 - **Smart generators** — volume calculator, compartment calculator, and a division designer that builds layouts from exact compartment sizes
 
@@ -98,7 +98,7 @@ Choose **Lid** (cap with lip) or **Drawer Sleeve**, and toggle **preview in plac
 - **Lip height** (2–20 mm) and **tolerance** (0.1–1 mm) for fit — sleeves have their own sliding-fit tolerance and optional finger cutouts
 - **Hinges** (lid style only) — 1–3 pin-less snap hinges; hinged lids are flat (no lip) so they print without supports
 - **Text / Emoji** — 8–40 mm, 0.3–2 mm deep, engraved or embossed, rotatable 0/90/180/270°
-- **Pattern** — cutout pattern through the lid cap or sleeve walls, with adjustable feature size and spacing
+- **Pattern** — cutout pattern through the lid cap or sleeve walls, with adjustable feature size and spacing. For lid caps, **Coverage Width (%)** and **Coverage Depth (%)** restrict the pattern to a smaller region (10–100%); **Position X (%)** and **Position Y (%)** move that region across the lid (-100 to 100). Position controls are disabled at 100% coverage, and **Reset to full lid** restores the original full-coverage behavior. These region controls apply only to the lid cap, not sleeve walls.
 - **Custom Holes** — same per-hole shape/size/position controls as the Box tab's custom holes, punched through the lid cap; includes the 4-corner screw-hole option for circles, and automatically avoids the text area (hidden for drawer sleeves, which have no cap)
 
 ### Settings

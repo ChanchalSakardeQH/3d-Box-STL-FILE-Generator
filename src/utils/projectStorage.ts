@@ -19,6 +19,10 @@ export const DEFAULTS: BoxParams = {
   lidPattern: 'none' as const,
   lidPatternSize: 8,
   lidPatternSpacing: 4,
+  lidPatternCoverageX: 100,
+  lidPatternCoverageY: 100,
+  lidPatternOffsetX: 0,
+  lidPatternOffsetY: 0,
   boxPattern: 'none' as const,
   boxPatternSize: 8,
   boxPatternSpacing: 4,
@@ -98,6 +102,10 @@ export function normalizeParams(raw: unknown): BoxParams {
   if (!LID_PATTERNS.some(o => o.value === p.lidPattern)) p.lidPattern = 'none'
   p.lidPatternSize = Math.min(Math.max(Number(p.lidPatternSize) || 8, 2), 30)
   p.lidPatternSpacing = Math.min(Math.max(Number(p.lidPatternSpacing) || 4, 1.5), 20)
+  p.lidPatternCoverageX = Math.min(Math.max(Number(p.lidPatternCoverageX) || 100, 10), 100)
+  p.lidPatternCoverageY = Math.min(Math.max(Number(p.lidPatternCoverageY) || 100, 10), 100)
+  p.lidPatternOffsetX = Math.min(Math.max(Number(p.lidPatternOffsetX) || 0, -100), 100)
+  p.lidPatternOffsetY = Math.min(Math.max(Number(p.lidPatternOffsetY) || 0, -100), 100)
   if (!LID_PATTERNS.some(o => o.value === p.boxPattern)) p.boxPattern = 'none'
   p.boxPatternSize = Math.min(Math.max(Number(p.boxPatternSize) || 8, 2), 30)
   p.boxPatternSpacing = Math.min(Math.max(Number(p.boxPatternSpacing) || 4, 1.5), 20)

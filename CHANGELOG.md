@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 with date-based entries since the project has no version releases.
 
+## 2026-08-12
+
+### Added
+- **Lid cutout pattern region controls.** The **Lid → Cutout Pattern** section now supports restricting the pattern to a configurable region of the lid cap instead of always covering the full lid.
+- **Coverage Width (%)** and **Coverage Depth (%)** sliders (10–100%) independently control the size of the cutout region. For example, 50% × 100% covers half the lid, while 50% × 50% covers a quarter of it.
+- **Position X (%)** and **Position Y (%)** sliders (-100 to 100) move a reduced cutout region across the lid. `0` keeps the region centered, while negative/positive values shift it toward opposite edges. The position controls are disabled when coverage is 100%.
+- **Reset to full lid** restores 100% × 100% coverage and the centered position, returning to the previous full-lid pattern behavior.
+- **Safe persistence and compatibility.** Coverage and position settings are clamped and saved/loaded with existing projects. Older projects without the new fields default to full-lid coverage, preserving their previous behavior.
+- **Lid-cap scope only.** These region controls apply to the lid cap and do not change drawer-sleeve wall cutout behavior.
+
 ## 2026-08-11
 
 ### Added

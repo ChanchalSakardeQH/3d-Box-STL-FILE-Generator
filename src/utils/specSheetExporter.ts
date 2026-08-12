@@ -298,6 +298,10 @@ export function exportSpecSheetPDF(input: SpecSheetInput) {
       w.spacer(1)
       w.kv('Cap cutout pattern', shapeLabel(p.lidPattern))
       w.kv('Pattern feature size / spacing', `${mm(p.lidPatternSize)} / ${mm(p.lidPatternSpacing)}`)
+      if (p.lidPatternCoverageX < 100 || p.lidPatternCoverageY < 100) {
+        w.kv('Pattern coverage (W × D)', `${p.lidPatternCoverageX}% × ${p.lidPatternCoverageY}%`)
+        w.kv('Pattern position (X, Y)', `${p.lidPatternOffsetX}%, ${p.lidPatternOffsetY}%`)
+      }
     }
 
     if (p.lidCustomHoles.length > 0) {

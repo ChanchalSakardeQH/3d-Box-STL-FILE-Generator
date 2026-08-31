@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 with date-based entries since the project has no version releases.
 
+## 2026-08-31 (3)
+
+### Fixed
+- **"Dividers Only" wasn't actually excluding the outer walls.** The Notch buttons (`Outer Walls` / `Outer + Dividers` / `Dividers Only`) set two fields at once — `fingerSlotOuterWalls` and `fingerSlotDividers` — via two back-to-back calls to `updateParam()`. `updateParam` builds its update by spreading the component's current `params` prop, which doesn't reflect the first call's change until React re-renders; so the second call silently overwrote the first one's field back to its old value. In practice this meant clicking "Dividers Only" set `fingerSlotDividers` correctly but reverted `fingerSlotOuterWalls` back to `true`, so the outer walls kept getting notched exactly as if "Outer + Dividers" were still selected. Fixed by combining both field updates into a single `onParamsChange()` call so they land together. The same bug was present in the lid cutout pattern's "Reset to full lid" button (four chained `updateParam()` calls, only the last of which actually stuck) — fixed the same way.
+- Audited the rest of `ControlPanel.tsx` for any other handler calling `updateParam()` more than once in a single click; none remain — every multi-field update now goes through one `onParamsChange()` call.
+
+## 2026-08-31 (2)
+
+### Fixed
+- **"Notch" selector (Outer Walls / Outer + Dividers / Dividers Only) now shows for both Finger Slot axes.** It was only appearing when the *currently selected* axis already had matching dividers configured — e.g. selecting **Z Walls** hid the selector entirely if only X dividers existed (and vice versa for **X Walls** with only Z dividers), making **"Dividers Only"** effectively unreachable for whichever axis didn't yet have dividers on it. The selector is now always shown whenever a Finger Slot axis is active, regardless of which dividers currently exist. When you do pick "Outer + Dividers" or "Dividers Only" for an axis that has no dividers yet, a small note explains there's nothing to notch there until one is added — rather than the control just disappearing.
+
+## 2026-08-31
+
+### Added
+- **Cutout pattern on divider walls.** In **Box → Cutout Pattern**, a new **"Also cut the pattern into divider walls"** checkbox extends the repeating side-wall pattern onto the X/Z divider walls too — previously dividers always stayed solid regardless of the box pattern. Off by default so existing designs render unchanged; each divider is punched through its own thickness the same way the outer walls are, staying clear of the top rim, the floor, and every crossing perpendicular divider at each intersection.
+- **Exclude the floor from the cutout pattern.** A second new checkbox, **"Keep the base solid (exclude the floor)"**, skips the floor when the box's cutout pattern is applied — previously the floor always got the same pattern as the side walls whenever one was selected. Handy for a box that should sit flush and flat (no light/dust leaking through the bottom) while still shedding filament on the sides.
+- Added `boxPatternDividers` / `boxPatternSkipFloor` fields to `BoxParams`, a new `dividerWallHoles()` geometry function in `boxGenerator.ts` (mirrors `boxWallHoles()`'s per-wall punching, but for the thinner divider walls), gated the existing `boxFloorHoles()` call behind the new skip-floor flag, defaults/sanitization in `projectStorage.ts`, and spec-sheet lines reporting whether dividers/floor are patterned or solid.
+- **"Notch divider walls only" option for Finger Slots.** The old single **"Notch divider walls too"** checkbox (which always notched the outer walls, optionally adding dividers) is now a three-way choice: **Outer Walls** (original default), **Outer + Dividers** (previous "too" behavior), and **Dividers Only** — leaves the outside of the box smooth and cuts finger-access notches only where compartments meet, for a cleaner exterior.
+- Added a `fingerSlotOuterWalls` field to `BoxParams` (default `true`) alongside the existing `fingerSlotDividers`; `fingerSlotCutouts()` now gates the outer-wall notch prisms behind it. `projectStorage.ts` sanitizes both fields and falls back to notching the outer walls if a saved project somehow has both turned off, so there's always at least one place to get a grip.
+- Added `check:stl` mesh-integrity cases covering divider-pattern cutouts (every shape, plus combined with chamfer/finger-slots/skip-floor), skip-floor alone and combined with divider cutouts, and dividers-only finger notches (including with a hinge, where the back wall must stay solid) — all 64 configurations in the sweep pass.
+
 ## 2026-08-12
 
 ### Added

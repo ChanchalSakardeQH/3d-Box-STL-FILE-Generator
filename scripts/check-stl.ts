@@ -99,6 +99,46 @@ const checks: Check[] = [
     })],
   },
   {
+    name: 'box · finger slots dividers only (no outer notches)',
+    build: () => [generateBox({
+      ...base, divisionsX: [33, 66], divisionsZ: [50],
+      fingerSlotAxes: 'both', fingerSlotOuterWalls: false, fingerSlotDividers: true,
+    })],
+  },
+  {
+    name: 'box · finger slots dividers only + hinge (back wall still solid)',
+    build: () => [generateBox({
+      ...base, divisionsZ: [50], includeHinge: true,
+      fingerSlotAxes: 'z', fingerSlotOuterWalls: false, fingerSlotDividers: true,
+    })],
+  },
+  ...PATTERNS.map(pattern => ({
+    name: `box · pattern ${pattern} + dividers cut too`,
+    build: () => [generateBox({
+      ...base, boxPattern: pattern, divisionsX: [33, 66], divisionsZ: [50],
+      boxPatternDividers: true,
+    })],
+  })),
+  {
+    name: 'box · pattern hexagons + dividers, chamfer, finger slots (combined)',
+    build: () => [generateBox({
+      ...base, boxPattern: 'hexagons', chamferSize: 1.5,
+      divisionsX: [50], divisionsZ: [40], boxPatternDividers: true,
+      fingerSlotAxes: 'both',
+    })],
+  },
+  {
+    name: 'box · pattern squares + skip floor (base stays flat)',
+    build: () => [generateBox({ ...base, boxPattern: 'squares', boxPatternSkipFloor: true })],
+  },
+  {
+    name: 'box · pattern circles + skip floor + dividers cut too',
+    build: () => [generateBox({
+      ...base, boxPattern: 'circles', divisionsX: [50], divisionsZ: [50],
+      boxPatternSkipFloor: true, boxPatternDividers: true,
+    })],
+  },
+  {
     name: 'box · finger slots + pattern hexagons',
     build: () => [generateBox({
       ...base, divisionsX: [50], boxPattern: 'hexagons', fingerSlotAxes: 'both',

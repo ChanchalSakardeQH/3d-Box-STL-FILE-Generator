@@ -26,6 +26,8 @@ export const DEFAULTS: BoxParams = {
   boxPattern: 'none' as const,
   boxPatternSize: 8,
   boxPatternSpacing: 4,
+  boxPatternDividers: false,
+  boxPatternSkipFloor: false,
   customHoles: [],
   lidCustomHoles: [],
   fingerSlotAxes: 'none' as const,
@@ -33,6 +35,7 @@ export const DEFAULTS: BoxParams = {
   fingerSlotDepth: 15,
   fingerSlotPosition: 50,
   fingerSlotDividers: true,
+  fingerSlotOuterWalls: true,
   chamferSize: 0,
   includeHinge: false,
   hingeCount: 1,
@@ -114,6 +117,12 @@ export function normalizeParams(raw: unknown): BoxParams {
   p.fingerSlotDepth = Math.min(Math.max(Number(p.fingerSlotDepth) || 15, 2), 200)
   p.fingerSlotPosition = Math.min(Math.max(Number(p.fingerSlotPosition) || 50, 0), 100)
   p.fingerSlotDividers = p.fingerSlotDividers !== false
+  p.fingerSlotOuterWalls = p.fingerSlotOuterWalls !== false
+  // If a project somehow ends up with both off, fall back to notching the
+  // outer walls rather than silently producing no notches at all.
+  if (!p.fingerSlotOuterWalls && !p.fingerSlotDividers) p.fingerSlotOuterWalls = true
+  p.boxPatternDividers = p.boxPatternDividers === true
+  p.boxPatternSkipFloor = p.boxPatternSkipFloor === true
   if (!Array.isArray(p.divisionsX)) p.divisionsX = []
   if (!Array.isArray(p.divisionsZ)) p.divisionsZ = []
   p.customHoles = Array.isArray(p.customHoles)

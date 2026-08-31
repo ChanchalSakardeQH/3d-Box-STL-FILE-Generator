@@ -738,18 +738,43 @@ export function ControlPanel({
 
               {params.fingerSlotAxes !== 'none' && (
                 <div className="space-y-4 pt-1">
-                  {(((params.fingerSlotAxes === 'x' || params.fingerSlotAxes === 'both') && params.divisionsX.length > 0) ||
-                    ((params.fingerSlotAxes === 'z' || params.fingerSlotAxes === 'both') && params.divisionsZ.length > 0)) && (
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={params.fingerSlotDividers}
-                        onChange={(e) => updateParam('fingerSlotDividers', e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300"
-                      />
-                      <span className="text-sm">Notch divider walls too</span>
-                    </label>
-                  )}
+                  <div className="space-y-2">
+                    <Label>Notch</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        { outer: true, dividers: false, label: 'Outer Walls' },
+                        { outer: true, dividers: true, label: 'Outer + Dividers' },
+                        { outer: false, dividers: true, label: 'Dividers Only' },
+                      ] as const).map(({ outer, dividers, label }) => (
+                        <button
+                          key={label}
+                          className={`px-2 py-1.5 text-sm rounded-md border ${
+                            params.fingerSlotOuterWalls === outer && params.fingerSlotDividers === dividers
+                              ? 'bg-primary text-primary-foreground' : 'bg-background'
+                          }`}
+                          onClick={() => {
+                            onParamsChange({ ...params, fingerSlotOuterWalls: outer, fingerSlotDividers: dividers })
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      "Dividers Only" leaves the outer walls solid and notches just the
+                      crossing dividers — handy when you only need finger access between
+                      compartments, not from the outside.
+                    </p>
+                    {params.fingerSlotDividers &&
+                      !(((params.fingerSlotAxes === 'x' || params.fingerSlotAxes === 'both') && params.divisionsX.length > 0) ||
+                        ((params.fingerSlotAxes === 'z' || params.fingerSlotAxes === 'both') && params.divisionsZ.length > 0)) && (
+                        <p className="text-xs text-amber-600">
+                          No {params.fingerSlotAxes === 'z' ? 'Z' : params.fingerSlotAxes === 'x' ? 'X' : 'X or Z'}{' '}
+                          dividers yet, so there's nothing to notch there — add one above, or switch
+                          back to "Outer Walls".
+                        </p>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <Label>Slot Width (mm)</Label>
@@ -847,6 +872,32 @@ export function ControlPanel({
                     />
                     <p className="text-xs text-muted-foreground">
                       Wider spacing means a stronger part; larger cutouts save more filament.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 pt-1 border-t">
+                    <label className="flex items-center gap-2 cursor-pointer pt-3">
+                      <input
+                        type="checkbox"
+                        checked={params.boxPatternDividers}
+                        onChange={(e) => updateParam('boxPatternDividers', e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm">Also cut the pattern into divider walls</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={params.boxPatternSkipFloor}
+                        onChange={(e) => updateParam('boxPatternSkipFloor', e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <span className="text-sm">Keep the base solid (exclude the floor)</span>
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Dividers stay solid and the floor gets the same pattern as the walls by
+                      default. Check the first box to punch dividers too; check the second to
+                      leave the base flat and uncut.
                     </p>
                   </div>
                 </div>
@@ -1281,12 +1332,13 @@ export function ControlPanel({
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                updateParam('lidPatternCoverageX', 100)
-                                updateParam('lidPatternCoverageY', 100)
-                                updateParam('lidPatternOffsetX', 0)
-                                updateParam('lidPatternOffsetY', 0)
-                              }}
+                              onClick={() => onParamsChange({
+                                ...params,
+                                lidPatternCoverageX: 100,
+                                lidPatternCoverageY: 100,
+                                lidPatternOffsetX: 0,
+                                lidPatternOffsetY: 0,
+                              })}
                             >
                               Reset to full lid
                             </Button>

@@ -246,6 +246,8 @@ export function exportSpecSheetPDF(input: SpecSheetInput) {
     w.spacer(1)
     w.kv('Side-wall cutout pattern', shapeLabel(p.boxPattern))
     w.kv('Pattern feature size / spacing', `${mm(p.boxPatternSize)} / ${mm(p.boxPatternSpacing)}`)
+    w.kv('Divider walls', p.boxPatternDividers ? 'Pattern cut through' : 'Solid')
+    w.kv('Floor', p.boxPatternSkipFloor ? 'Solid (excluded)' : 'Pattern cut through')
   }
 
   if (p.customHoles.length > 0) {
@@ -264,6 +266,7 @@ export function exportSpecSheetPDF(input: SpecSheetInput) {
     w.kv('Notch width', mm(p.fingerSlotWidth))
     w.kv('Notch depth (down from rim)', mm(p.fingerSlotDepth))
     w.kv('Position along span', pct(p.fingerSlotPosition))
+    w.kv('Notch outer walls', p.fingerSlotOuterWalls ? 'Yes' : 'No')
     w.kv('Also notch dividers', p.fingerSlotDividers ? 'Yes' : 'No')
   }
 
